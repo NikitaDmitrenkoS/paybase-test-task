@@ -1,9 +1,11 @@
 package com.paybase.testtask.domain;
 
 
+import com.paybase.testtask.exceptions.InsufficientFundsException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -11,6 +13,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "accounts")
 @Getter
+@Setter
 @NoArgsConstructor
 
 public class AccountEntity {

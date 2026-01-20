@@ -1,6 +1,7 @@
 package com.paybase.testtask.controller;
 
 import com.paybase.testtask.dto.TransactionRequest;
+import com.paybase.testtask.dto.TransactionResponse;
 import com.paybase.testtask.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

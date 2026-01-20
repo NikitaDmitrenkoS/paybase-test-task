@@ -3,6 +3,7 @@ package com.paybase.testtask.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -13,6 +14,7 @@ import java.time.Instant;
         uniqueConstraints = @UniqueConstraint(columnNames = "idempotencyKey")
 )
 @Getter
+@Setter
 @NoArgsConstructor
 public class TransactionEntity {
 
