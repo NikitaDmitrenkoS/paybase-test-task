@@ -12,8 +12,7 @@ public record TransactionRequest(
         @NotNull TransactionType type,
         Long fromAccountId,
         Long toAccountId,
-        @DecimalMin("0.0001") BigDecimal amount,
+        @NotNull @DecimalMin("0.0001") BigDecimal amount,
         @NotBlank String currency,
         String reference
 ) {}
-
