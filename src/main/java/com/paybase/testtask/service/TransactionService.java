@@ -29,11 +29,9 @@ public class TransactionService {
     private TransactionEntity execute(TransactionRequest r) {
 
         return switch (r.type()) {
-            case DEPOSIT -> deposit(r);
-            case WITHDRAWAL -> withdraw(r);
+            case DEPOSIT, REFUND -> deposit(r);
+            case WITHDRAWAL, FEE -> withdraw(r);
             case TRANSFER -> transfer(r);
-            case FEE -> withdraw(r);
-            case REFUND -> deposit(r);
         };
     }
 
