@@ -18,7 +18,7 @@ import java.time.Instant;
 
 public class AccountEntity {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String merchantId;

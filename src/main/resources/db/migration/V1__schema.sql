@@ -1,12 +1,3 @@
-CREATE TABLE accounts (
-                          id BIGSERIAL PRIMARY KEY,
-                          merchant_id VARCHAR(100) NOT NULL,
-                          balance NUMERIC(19,4) NOT NULL CHECK (balance >= 0),
-                          currency VARCHAR(3) NOT NULL,
-                          status VARCHAR(20) NOT NULL,
-                          created_at TIMESTAMP NOT NULL
-);
-
 CREATE TABLE transactions (
                               id BIGSERIAL PRIMARY KEY,
                               idempotency_key VARCHAR(255) UNIQUE NOT NULL,
@@ -20,5 +11,15 @@ CREATE TABLE transactions (
                               from_balance_after NUMERIC(19,4),
                               to_balance_before NUMERIC(19,4),
                               to_balance_after NUMERIC(19,4),
+                              reference varchar(100),
                               created_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE accounts (
+                          id BIGSERIAL PRIMARY KEY,
+                          merchant_id VARCHAR(100) NOT NULL,
+                          balance NUMERIC(19,4) NOT NULL CHECK (balance >= 0),
+                          currency VARCHAR(3) NOT NULL,
+                          status VARCHAR(20) NOT NULL,
+                          created_at TIMESTAMP NOT NULL
 );
