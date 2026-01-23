@@ -11,7 +11,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name = "accounts")
+@Table(
+        name = "accounts",
+        indexes = {
+                @Index(name = "idx_account_merchant", columnList = "merchant_id")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,16 +26,20 @@ public class AccountEntity {
     @GeneratedValue
     private Long id;
 
+    @Column(name = "merchant_id", nullable = false)
     private String merchantId;
 
-    @Column(precision = 19, scale = 4)
+    @Column(precision = 19, scale = 4, nullable = false)
     private BigDecimal balance;
 
+    @Column(nullable = false, length = 3)
     private String currency;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private AccountStatus status;
 
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     public void credit(BigDecimal amount) {

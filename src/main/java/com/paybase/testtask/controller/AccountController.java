@@ -1,19 +1,21 @@
 package com.paybase.testtask.controller;
 
-import com.paybase.testtask.domain.AccountEntity;
-import com.paybase.testtask.domain.TransactionEntity;
+import com.paybase.testtask.dto.AccountResponse;
 import com.paybase.testtask.dto.BalanceResponse;
 import com.paybase.testtask.dto.CreateAccountRequest;
+import com.paybase.testtask.dto.StatementResponse;
 import com.paybase.testtask.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,8 +31,8 @@ public class AccountController {
             @ApiResponse(responseCode = "200", description = "Account created"),
             @ApiResponse(responseCode = "400", description = "Validation error")
     })
-    public AccountEntity create(@RequestBody CreateAccountRequest r) {
-        return service.create(r);
+    public AccountResponse create(@Valid @RequestBody CreateAccountRequest r) {
+        return AccountResponse.from(service.create(r));
     }
 
     @GetMapping("/{id}/balance")
@@ -51,9 +53,17 @@ public class AccountController {
             @ApiResponse(responseCode = "200", description = "Statement retrieved"),
             @ApiResponse(responseCode = "404", description = "Account not found")
     })
-    public List<TransactionEntity> statement(
+    public StatementResponse statement(
             @Parameter(description = "Account identifier", example = "123")
-            @PathVariable Long id) {
-        return service.statement(id);
+            @PathVariable Long id,
+            @Parameter(description = "Statement start date (inclusive)", example = "2026-01-01")
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate from,
+            @Parameter(description = "Statement end date (inclusive)", example = "2026-01-31")
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate to) {
+        return service.statement(id, from, to);
     }
 }

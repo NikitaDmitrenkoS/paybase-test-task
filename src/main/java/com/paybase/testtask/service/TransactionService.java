@@ -3,11 +3,13 @@ package com.paybase.testtask.service;
 import com.paybase.testtask.domain.AccountEntity;
 import com.paybase.testtask.dto.TransactionRequest;
 import com.paybase.testtask.domain.TransactionEntity;
+import com.paybase.testtask.exceptions.NotFoundException;
 import com.paybase.testtask.repository.AccountRepository;
 import com.paybase.testtask.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,11 +21,18 @@ public class TransactionService {
     private final AccountRepository accountRepo;
     private final TransactionRepository txRepo;
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public TransactionEntity create(TransactionRequest r) {
+
+        validateRequest(r);
 
         return txRepo.findByIdempotencyKey(r.idempotencyKey())
                 .orElseGet(() -> execute(r));
+    }
+
+    @Transactional(readOnly = true)
+    public TransactionEntity getById(Long id) {
+        return txRepo.findById(id).orElseThrow(NotFoundException::new);
     }
 
     private TransactionEntity execute(TransactionRequest r) {
@@ -39,7 +48,9 @@ public class TransactionService {
 
     private TransactionEntity deposit(TransactionRequest r) {
 
-        var acc = accountRepo.lockById(r.toAccountId()).orElseThrow();
+        var acc = accountRepo.lockById(r.toAccountId())
+                .orElseThrow(NotFoundException::new);
+        validateCurrency(acc, r.currency());
 
         var before = acc.getBalance();
         acc.credit(r.amount());
@@ -49,7 +60,9 @@ public class TransactionService {
 
     private TransactionEntity withdraw(TransactionRequest r) {
 
-        var acc = accountRepo.lockById(r.fromAccountId()).orElseThrow();
+        var acc = accountRepo.lockById(r.fromAccountId())
+                .orElseThrow(NotFoundException::new);
+        validateCurrency(acc, r.currency());
 
         var before = acc.getBalance();
         acc.debit(r.amount());
@@ -59,8 +72,25 @@ public class TransactionService {
 
     private TransactionEntity transfer(TransactionRequest r) {
 
-        var from = accountRepo.lockById(r.fromAccountId()).orElseThrow();
-        var to = accountRepo.lockById(r.toAccountId()).orElseThrow();
+        Long fromId = r.fromAccountId();
+        Long toId = r.toAccountId();
+
+        AccountEntity firstLock = fromId < toId
+                ? accountRepo.lockById(fromId).orElseThrow(NotFoundException::new)
+                : accountRepo.lockById(toId).orElseThrow(NotFoundException::new);
+        AccountEntity secondLock = fromId < toId
+                ? accountRepo.lockById(toId).orElseThrow(NotFoundException::new)
+                : accountRepo.lockById(fromId).orElseThrow(NotFoundException::new);
+
+        AccountEntity from = firstLock.getId().equals(fromId)
+                ? firstLock
+                : secondLock;
+        AccountEntity to = firstLock.getId().equals(toId)
+                ? firstLock
+                : secondLock;
+
+        validateCurrency(from, r.currency());
+        validateCurrency(to, r.currency());
 
         var fromBefore = from.getBalance();
         var toBefore = to.getBalance();
@@ -112,6 +142,45 @@ public class TransactionService {
         tx.setCreatedAt(Instant.now());
 
         return txRepo.save(tx);
+    }
+
+    private void validateRequest(TransactionRequest r) {
+        switch (r.type()) {
+            case DEPOSIT, REFUND -> {
+                requireAccount(r.toAccountId(), "toAccountId");
+                ensureNull(r.fromAccountId(), "fromAccountId");
+            }
+            case WITHDRAWAL, FEE -> {
+                requireAccount(r.fromAccountId(), "fromAccountId");
+                ensureNull(r.toAccountId(), "toAccountId");
+            }
+            case TRANSFER -> {
+                requireAccount(r.fromAccountId(), "fromAccountId");
+                requireAccount(r.toAccountId(), "toAccountId");
+                if (r.fromAccountId().equals(r.toAccountId())) {
+                    throw new IllegalArgumentException(
+                            "fromAccountId and toAccountId must differ");
+                }
+            }
+        }
+    }
+
+    private void requireAccount(Long accountId, String fieldName) {
+        if (accountId == null) {
+            throw new IllegalArgumentException(fieldName + " is required");
+        }
+    }
+
+    private void ensureNull(Long accountId, String fieldName) {
+        if (accountId != null) {
+            throw new IllegalArgumentException(fieldName + " must be null");
+        }
+    }
+
+    private void validateCurrency(AccountEntity account, String currency) {
+        if (!account.getCurrency().equalsIgnoreCase(currency)) {
+            throw new IllegalArgumentException("Currency mismatch for account");
+        }
     }
 
 }
