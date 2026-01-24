@@ -2,7 +2,6 @@ package com.paybase.testtask.controller;
 
 import com.paybase.testtask.dto.TransactionDetailsResponse;
 import com.paybase.testtask.dto.TransactionRequest;
-import com.paybase.testtask.dto.TransactionResponse;
 import com.paybase.testtask.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,11 +32,11 @@ public class TransactionController {
             @ApiResponse(responseCode = "404", description = "Account not found"),
             @ApiResponse(responseCode = "409", description = "Insufficient funds")
     })
-    public TransactionResponse create(
+    public TransactionDetailsResponse create(
             @Valid @RequestBody TransactionRequest r) {
 
         var tx = service.create(r);
-        return TransactionResponse.from(tx);
+        return TransactionDetailsResponse.from(tx);
     }
 
     @GetMapping("/{id}")
