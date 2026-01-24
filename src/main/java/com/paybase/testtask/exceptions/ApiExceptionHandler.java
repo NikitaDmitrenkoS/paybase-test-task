@@ -15,5 +15,11 @@ public class ApiExceptionHandler {
                 .body("Insufficient funds");
     }
 
-}
+    @ExceptionHandler(NotFoundException.class)
+    ResponseEntity<?> notFound() {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body("Not found");
+    }
 
+}

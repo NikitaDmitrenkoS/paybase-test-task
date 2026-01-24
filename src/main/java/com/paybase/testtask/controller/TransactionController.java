@@ -1,5 +1,6 @@
 package com.paybase.testtask.controller;
 
+import com.paybase.testtask.dto.TransactionDetailsResponse;
 import com.paybase.testtask.dto.TransactionRequest;
 import com.paybase.testtask.dto.TransactionResponse;
 import com.paybase.testtask.service.TransactionService;
@@ -9,6 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,5 +38,15 @@ public class TransactionController {
 
         var tx = service.create(r);
         return TransactionResponse.from(tx);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get transaction", description = "Returns details for a single transaction.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Transaction retrieved"),
+            @ApiResponse(responseCode = "404", description = "Transaction not found")
+    })
+    public TransactionDetailsResponse get(@PathVariable Long id) {
+        return TransactionDetailsResponse.from(service.get(id));
     }
 }

@@ -3,6 +3,7 @@ package com.paybase.testtask.service;
 import com.paybase.testtask.domain.AccountEntity;
 import com.paybase.testtask.dto.TransactionRequest;
 import com.paybase.testtask.domain.TransactionEntity;
+import com.paybase.testtask.exceptions.NotFoundException;
 import com.paybase.testtask.repository.AccountRepository;
 import com.paybase.testtask.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,11 @@ public class TransactionService {
 
         return txRepo.findByIdempotencyKey(r.idempotencyKey())
                 .orElseGet(() -> execute(r));
+    }
+
+    @Transactional(readOnly = true)
+    public TransactionEntity get(Long id) {
+        return txRepo.findById(id).orElseThrow(NotFoundException::new);
     }
 
     private TransactionEntity execute(TransactionRequest r) {
